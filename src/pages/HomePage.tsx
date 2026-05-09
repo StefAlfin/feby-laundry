@@ -106,19 +106,44 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative lg:h-[600px] flex items-center justify-center lg:justify-end mt-8 lg:mt-0"
+            className="relative lg:h-[600px] flex gap-4 lg:gap-6 mt-12 lg:mt-0 justify-center w-full max-w-2xl lg:max-w-none mx-auto lg:ml-auto"
           >
-            <div className="relative w-full max-w-lg aspect-[4/3] lg:aspect-auto lg:w-[90%] lg:h-full rounded-3xl overflow-hidden shadow-2xl shadow-slate-200/50">
-              <img 
-                src="https://images.unsplash.com/photo-1545173168-9f1947eebb7f?q=80&w=2000&auto=format&fit=crop" 
-                alt="Tumpukan handuk bersih" 
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
+            <div className="flex flex-col gap-4 lg:gap-6 w-1/2 pt-8 lg:pt-16">
+              <div className="relative w-full aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl shadow-slate-300/40 group">
+                <img 
+                  src="https://images.unsplash.com/photo-1545173168-9f1947eebb7f?q=80&w=800&auto=format&fit=crop" 
+                  alt="Handuk bersih" 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              </div>
+              <div className="relative w-full aspect-square rounded-3xl overflow-hidden shadow-2xl shadow-slate-300/40 group">
+                <img 
+                  src="https://images.unsplash.com/photo-1582735689369-4fe89db7114c?q=80&w=800&auto=format&fit=crop" 
+                  alt="Mesin cuci" 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
+                />
+              </div>
             </div>
             
-            {/* Decorative background shape for image */}
-            <div className="absolute inset-0 bg-blue-100 rounded-3xl -z-10 transform translate-x-4 translate-y-4 lg:w-[90%] lg:h-full lg:right-0 lg:ml-auto"></div>
+            <div className="flex flex-col gap-4 lg:gap-6 w-1/2 pb-8 lg:pb-16 -mt-8">
+              <div className="relative w-full aspect-square rounded-3xl overflow-hidden shadow-2xl shadow-slate-300/40 group">
+                <img 
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1KFB3lW6CDzdqidmapHiwwsGA5sLOIZ3p0Q&s" 
+                  alt="Pakaian rapi" 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
+                />
+              </div>
+              <div className="relative w-full aspect-[4/5] rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600 to-sky-500 shadow-2xl shadow-blue-500/30 flex flex-col justify-center items-center text-center p-6 text-white group">
+                <Droplets size={48} className="mb-4 text-blue-100 group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500" />
+                <h3 className="font-extrabold text-3xl mb-2">100%</h3>
+                <p className="text-blue-100 font-medium text-sm lg:text-base leading-tight">Kepuasan<br/>Pelanggan</p>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent opacity-50"></div>
+              </div>
+            </div>
+            
+            {/* Decorative blob behind */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-blue-200/50 rounded-full mix-blend-multiply filter blur-3xl -z-10"></div>
           </motion.div>
         </div>
       </section>
