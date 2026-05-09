@@ -1,0 +1,6 @@
+{
+  "name": "Feby Laundry App",
+  "description": "Aplikasi manajemen laundry full-stack dengan fitur pesanan pelanggan, pelacakan real-time, dan dashboard admin terintegrasi SQLite.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
