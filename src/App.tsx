@@ -49,9 +49,10 @@ export default function App() {
     };
   }, []);
 
-  // Close mobile menu on route change
+  // Close mobile menu on route change and scroll to top
   useEffect(() => {
     setMobileMenuOpen(false);
+    window.scrollTo(0, 0);
   }, [location]);
 
   const isAdminDashboard = location.pathname === '/dashboard' && role === 'admin';
