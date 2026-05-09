@@ -2,7 +2,8 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import type { Order, Promo } from './types.js';
 
-const dbPath = path.resolve(process.cwd(), 'laundry.db');
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV || process.env.NODE_ENV === 'production';
+const dbPath = isVercel ? path.join('/tmp', 'laundry.db') : path.resolve(process.cwd(), 'laundry.db');
 const db = new Database(dbPath);
 
 db.pragma('journal_mode = WAL');
