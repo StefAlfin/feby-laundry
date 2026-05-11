@@ -39,6 +39,10 @@ export default function DashboardPage() {
   const [editingPromo, setEditingPromo] = useState<Promo | null>(null);
   const [promoForm, setPromoForm] = useState({ title: '', description: '', code: '', valid_until: '', terms: '' });
 
+  // Promo Delete Confirmation Modal
+  const [isDeletePromoModalOpen, setIsDeletePromoModalOpen] = useState(false);
+  const [promoToDelete, setPromoToDelete] = useState<number | null>(null);
+
   // Review modal state
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewOrder, setReviewOrder] = useState<Order | null>(null);
@@ -225,12 +229,19 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeletePromo = async (id: number) => {
-    if (!confirm('Yakin ingin menghapus promo ini?')) return;
+  const handleDeletePromo = (id: number) => {
+    setPromoToDelete(id);
+    setIsDeletePromoModalOpen(true);
+  };
+
+  const confirmDeletePromo = async () => {
+    if (promoToDelete === null) return;
     try {
-      const res = await fetch(`/api/admin/promos/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/promos/${promoToDelete}`, { method: 'DELETE' });
       if (res.ok) {
         fetchData();
+        setIsDeletePromoModalOpen(false);
+        setPromoToDelete(null);
       } else {
         alert('Gagal menghapus promo');
       }
@@ -1025,6 +1036,44 @@ export default function DashboardPage() {
                   {editingPromo ? 'Simpan Perubahan' : 'Buat Promo'}
                 </button>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Promo Confirmation Modal */}
+      <AnimatePresence>
+        {isDeletePromoModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative text-center"
+            >
+              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Hapus Promo?</h3>
+              <p className="text-slate-600 mb-6 focus:outline-none">Apakah Anda yakin ingin menghapus promo ini? Tindakan ini tidak dapat dibatalkan.</p>
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => {
+                    setIsDeletePromoModalOpen(false);
+                    setPromoToDelete(null);
+                  }}
+                  className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                >
+                  Batal
+                </button>
+                <button 
+                  onClick={confirmDeletePromo}
+                  className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-sm"
+                >
+                  Ya, Hapus
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

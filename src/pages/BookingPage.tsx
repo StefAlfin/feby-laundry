@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ShoppingBag, ArrowRight, X } from 'lucide-react';
 
 interface Service {
   id: string;
@@ -21,6 +21,7 @@ export default function BookingPage() {
     promo_code: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/services')
@@ -39,8 +40,12 @@ export default function BookingPage() {
     }
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleReviewOrder = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsModalOpen(true);
+  };
+
+  const confirmSubmit = async () => {
     setIsSubmitting(true);
     try {
       const payload: any = { ...formData };
@@ -61,6 +66,7 @@ export default function BookingPage() {
       });
       if (res.ok) {
         const order = await res.json();
+        setIsModalOpen(false);
         navigate(`/lacak?id=${order.id}`, { state: { success: true } });
       } else {
         const err = await res.json();
@@ -91,7 +97,7 @@ export default function BookingPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleReviewOrder} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Nama Lengkap</label>
@@ -191,6 +197,79 @@ export default function BookingPage() {
           </div>
         </form>
       </motion.div>
+
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" 
+              onClick={() => setIsModalOpen(false)} 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95, y: 20 }} 
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-lg relative z-10 overflow-hidden"
+            >
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 className="text-xl font-bold text-slate-900">Konfirmasi Pesanan</h3>
+                <button 
+                  onClick={() => setIsModalOpen(false)} 
+                  className="text-slate-400 hover:text-slate-600 bg-white shadow-sm p-2 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-7 space-y-4">
+                <p className="text-slate-600 mb-2">Mohon periksa kembali detail pesanan Anda sebelum kami proses.</p>
+                
+                <div className="bg-slate-50 rounded-2xl p-5 space-y-3 border border-slate-100">
+                  <div className="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
+                    <span className="text-sm text-slate-500 col-span-1">Nama</span>
+                    <span className="text-sm font-semibold text-slate-900 col-span-2">{formData.customer_name}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
+                    <span className="text-sm text-slate-500 col-span-1">No. WA</span>
+                    <span className="text-sm font-semibold text-slate-900 col-span-2">{formData.phone}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
+                    <span className="text-sm text-slate-500 col-span-1">Layanan</span>
+                    <span className="text-sm font-semibold text-slate-900 col-span-2 capitalize">{services.find(s => s.id === formData.service_type)?.name || formData.service_type}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 border-b border-slate-200 pb-2">
+                    <span className="text-sm text-slate-500 col-span-1">Parfum</span>
+                    <span className="text-sm font-semibold text-slate-900 col-span-2 capitalize">{formData.scent}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <span className="text-sm text-slate-500 col-span-1">Alamat</span>
+                    <span className="text-sm font-semibold text-slate-900 col-span-2 leading-relaxed">{formData.address}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button 
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={confirmSubmit}
+                    disabled={isSubmitting}
+                    className="flex-2 w-2/3 px-4 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-70 flex justify-center items-center gap-2"
+                  >
+                    {isSubmitting ? 'Memproses...' : 'Ya, Kirim Pesanan'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { Search, Loader2, CheckCircle2, Clock, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Search, Loader2, CheckCircle2, Clock, CheckCircle, Star, X } from 'lucide-react';
 import { Order } from '../types';
 
 const STATUS_STEPS = [
@@ -17,10 +17,27 @@ export default function TrackPage() {
   const location = useLocation();
   
   const [orders, setOrders] = useState<Order[]>([]);
+  const [reviews, setReviews] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [hasSuccessMsg, setHasSuccessMsg] = useState(location.state?.success || false);
+
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewOrder, setReviewOrder] = useState<Order | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const checkReview = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/reviews/${orderId}`);
+      if (res.ok) {
+        const review = await res.json();
+        setReviews(prev => ({...prev, [orderId]: review}));
+      }
+    } catch(e) {}
+  };
 
   const fetchOrder = async (query: string, type: 'id' | 'phone') => {
     if (!query) return;
@@ -32,6 +49,11 @@ export default function TrackPage() {
         const data = await res.json();
         setOrders(data);
         if (data.length === 0) setError('Pesanan tidak ditemukan.');
+        else {
+          data.forEach((o: Order) => {
+            if (o.status === 'Selesai') checkReview(o.id);
+          });
+        }
       } else {
         const errData = await res.json();
         setError(errData.error || 'Gagal mencari pesanan');
@@ -41,6 +63,38 @@ export default function TrackPage() {
       setError('Terjadi kesalahan jaringan');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewOrder) return;
+    setSubmittingReview(true);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: localStorage.getItem('userId') || undefined,
+          customer_name: reviewOrder.customer_name || 'Guest',
+          order_id: reviewOrder.id,
+          rating: reviewRating,
+          comment: reviewComment
+        })
+      });
+      if (res.ok) {
+        const newReview = await res.json();
+        setReviews(prev => ({...prev, [reviewOrder.id]: newReview}));
+        setIsReviewModalOpen(false);
+        alert('Terima kasih atas ulasan Anda!');
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Gagal mengirim ulasan');
+      }
+    } catch (e) {
+      alert('Terjadi kesalahan jaringan');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -156,10 +210,86 @@ export default function TrackPage() {
                   </div>
                 </div>
               </div>
+
+              {order.status === 'Selesai' && !reviews[order.id] && (
+                <div className="mt-8 flex justify-center">
+                  <button 
+                    onClick={() => {
+                      setReviewOrder(order);
+                      setReviewRating(5);
+                      setReviewComment('');
+                      setIsReviewModalOpen(true);
+                    }}
+                    className="flex items-center gap-2 bg-amber-50 text-amber-600 font-bold py-3 px-6 rounded-xl hover:bg-amber-100 transition-colors"
+                  >
+                    <Star size={20} /> Beri Nilai Layanan Ini
+                  </button>
+                </div>
+              )}
+              {order.status === 'Selesai' && reviews[order.id] && (
+                <div className="mt-8 flex justify-center">
+                  <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 font-bold py-3 px-6 rounded-xl">
+                    <Star size={20} className="fill-current" /> Anda telah menilai pesanan ini
+                  </div>
+                </div>
+              )}
             </motion.div>
           );
         })}
       </div>
+
+      {/* Review Modal */}
+      <AnimatePresence>
+        {isReviewModalOpen && reviewOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsReviewModalOpen(false)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-lg relative z-10 overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 className="text-xl font-bold text-slate-900">Beri Nilai Pesanan</h3>
+                <button onClick={() => setIsReviewModalOpen(false)} className="text-slate-400 hover:text-slate-600 bg-white shadow-sm p-2 rounded-full transition-colors"><X size={20} /></button>
+              </div>
+              <div className="p-6">
+                <div className="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <p className="text-sm text-slate-500 mb-1">ID Pesanan</p>
+                  <p className="font-bold text-slate-900">{reviewOrder.id} - <span className="capitalize">{reviewOrder.service_type}</span></p>
+                </div>
+                <form onSubmit={handleReviewSubmit}>
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-slate-700 mb-3 text-center">Berapa bintang untuk layanan ini?</label>
+                    <div className="flex justify-center gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewRating(star)}
+                          className="p-1 transition-transform hover:scale-110"
+                        >
+                          <Star 
+                            size={40} 
+                            className={star <= reviewRating ? "fill-amber-400 text-amber-400" : "text-slate-200"} 
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Pesan & Kesan (Opsional)</label>
+                    <textarea 
+                      value={reviewComment}
+                      onChange={e => setReviewComment(e.target.value)}
+                      placeholder="Bagaimana hasil cucian kami?"
+                      className="w-full border border-slate-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow min-h-[100px]"
+                    />
+                  </div>
+                  <button type="submit" disabled={submittingReview} className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50">
+                    {submittingReview ? 'Menyimpan...' : 'Kirim Ulasan'}
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
